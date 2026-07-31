@@ -1,4 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import {
   Bell,
   CalendarDays,
@@ -34,7 +35,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sidebar,
@@ -65,12 +70,12 @@ const nav = [
 ] as const;
 
 function AppSidebar() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = usePathname();
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-3 py-4">
-        <Link to="/" className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
             <ClipboardList className="h-4 w-4" />
           </span>
@@ -86,8 +91,11 @@ function AppSidebar() {
             <SidebarMenu>
               {nav.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.title}>
-                    <Link to={item.url} className="flex items-center gap-2">
+                  <SidebarMenuButton
+                    isActive={pathname === item.url}
+                    tooltip={item.title}
+                  >
+                    <Link href={item.url} className="flex items-center gap-2">
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </Link>
@@ -102,8 +110,8 @@ function AppSidebar() {
         <div className="rounded-xl bg-primary-soft p-3 text-xs text-foreground/80">
           <p className="font-medium text-foreground">Trial funnel is live</p>
           <p className="mt-1">Share your booking page to fill next week.</p>
-          <Button asChild size="sm" className="mt-3 w-full">
-            <Link to="/book">Open booking page</Link>
+          <Button size="sm" className="mt-3 w-full">
+            <Link href="/book">Open booking page</Link>
           </Button>
         </div>
       </SidebarFooter>
@@ -111,7 +119,13 @@ function AppSidebar() {
   );
 }
 
-function GlobalSearch({ open, setOpen }: { open: boolean; setOpen: (v: boolean) => void }) {
+function GlobalSearch({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+}) {
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput placeholder="Search students, teachers, pages…" />
@@ -120,7 +134,7 @@ function GlobalSearch({ open, setOpen }: { open: boolean; setOpen: (v: boolean) 
         <CommandGroup heading="Pages">
           {nav.map((item) => (
             <CommandItem key={item.url} value={item.title} asChild>
-              <Link to={item.url} onClick={() => setOpen(false)}>
+              <Link href={item.url} onClick={() => setOpen(false)}>
                 <item.icon className="mr-2 h-4 w-4" />
                 {item.title}
               </Link>
@@ -130,7 +144,7 @@ function GlobalSearch({ open, setOpen }: { open: boolean; setOpen: (v: boolean) 
         <CommandGroup heading="Students">
           {students.map((s) => (
             <CommandItem key={s.id} value={s.name} asChild>
-              <Link to="/students/$studentId" params={{ studentId: s.id }} onClick={() => setOpen(false)}>
+              <Link href={`/students/${s.id}`} onClick={() => setOpen(false)}>
                 <Users className="mr-2 h-4 w-4" />
                 {s.name}
               </Link>
@@ -139,7 +153,11 @@ function GlobalSearch({ open, setOpen }: { open: boolean; setOpen: (v: boolean) 
         </CommandGroup>
         <CommandGroup heading="Teachers">
           {teachers.map((t) => (
-            <CommandItem key={t.id} value={t.name} onSelect={() => setOpen(false)}>
+            <CommandItem
+              key={t.id}
+              value={t.name}
+              onSelect={() => setOpen(false)}
+            >
               <GraduationCap className="mr-2 h-4 w-4" />
               {t.name}
             </CommandItem>
@@ -170,7 +188,11 @@ export function AppShell({
         e.preventDefault();
         setSearchOpen((v) => !v);
       }
-      if (e.key === "/" && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
+      if (
+        e.key === "/" &&
+        !(e.target instanceof HTMLInputElement) &&
+        !(e.target instanceof HTMLTextAreaElement)
+      ) {
         e.preventDefault();
         setSearchOpen(true);
       }
@@ -193,16 +215,23 @@ export function AppShell({
               >
                 <Search className="h-4 w-4 shrink-0" />
                 <span className="truncate">Search everything…</span>
-                <kbd className="ml-auto rounded border border-border px-1.5 text-[10px]">⌘K</kbd>
+                <kbd className="ml-auto rounded border border-border px-1.5 text-[10px]">
+                  ⌘K
+                </kbd>
               </button>
-              <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => setSearchOpen(true)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="sm:hidden"
+                onClick={() => setSearchOpen(true)}
+              >
                 <Search className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex items-center gap-1">
               <ThemeToggle />
               <Popover>
-                <PopoverTrigger asChild>
+                <PopoverTrigger>
                   <Button variant="ghost" size="icon" className="relative">
                     <Bell className="h-4 w-4" />
                     {unread > 0 && (
@@ -213,47 +242,58 @@ export function AppShell({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-80 p-0">
-                  <div className="border-b border-border px-4 py-3 text-sm font-medium">Notifications</div>
+                  <div className="border-b border-border px-4 py-3 text-sm font-medium">
+                    Notifications
+                  </div>
                   <ScrollArea className="h-72">
                     {notifications.slice(0, 6).map((n) => (
-                      <div key={n.id} className="border-b border-border px-4 py-3 last:border-0">
+                      <div
+                        key={n.id}
+                        className="border-b border-border px-4 py-3 last:border-0"
+                      >
                         <p className="text-sm font-medium">{n.title}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{n.description}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {n.description}
+                        </p>
                       </div>
                     ))}
                   </ScrollArea>
                   <div className="p-2">
-                    <Button asChild variant="ghost" size="sm" className="w-full">
-                      <Link to="/notifications">View all</Link>
+                    <Button variant="ghost" size="sm" className="w-full">
+                      <Link href="/notifications">View all</Link>
                     </Button>
                   </div>
                 </PopoverContent>
               </Popover>
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger>
                   <Button variant="ghost" className="gap-2 px-1.5">
                     <Avatar className="h-7 w-7">
-                      <AvatarFallback className="bg-primary-soft text-xs text-primary">AR</AvatarFallback>
+                      <AvatarFallback className="bg-primary-soft text-xs text-primary">
+                        AR
+                      </AvatarFallback>
                     </Avatar>
-                    <span className="hidden text-sm font-medium md:inline">Alex Reed</span>
+                    <span className="hidden text-sm font-medium md:inline">
+                      Alex Reed
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuLabel>Alex Reed · Admin</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings">
+                  <DropdownMenuItem>
+                    <Link href="/settings">
                       <User className="mr-2 h-4 w-4" /> Profile
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings">
+                  <DropdownMenuItem>
+                    <Link href="/settings">
                       <Settings className="mr-2 h-4 w-4" /> Settings
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/">
+                  <DropdownMenuItem>
+                    <Link href="/">
                       <LogOut className="mr-2 h-4 w-4" /> Sign out
                     </Link>
                   </DropdownMenuItem>
@@ -264,8 +304,14 @@ export function AppShell({
           <main className="min-w-0 flex-1 p-4 sm:p-6">
             <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
-                {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+                <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
+                  {title}
+                </h1>
+                {description && (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {description}
+                  </p>
+                )}
               </div>
               {actions}
             </div>

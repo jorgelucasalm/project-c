@@ -130,9 +130,6 @@ export default function Landing() {
             <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
               <Link href="/dashboard">Admin login</Link>
             </Button>
-            <Button size="sm">
-              <Link href="/book">Book free trial</Link>
-            </Button>
           </div>
         </div>
       </header>
@@ -148,8 +145,8 @@ export default function Landing() {
               life. Try your first 30-minute lesson free.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button size="lg">
-                <Link href="/book">
+              <Button size="lg" className="px-6 py-6">
+                <Link href="/book" className="flex items-center">
                   Book Your Free Trial Lesson{" "}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -238,25 +235,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-20">
-        <div className="card-surface flex flex-col items-center gap-4 px-6 py-14 text-center">
-          <h2 className="max-w-2xl text-3xl font-semibold tracking-tight">
-            Book a trial lesson and meet your teacher this week
-          </h2>
-          <p className="max-w-xl text-muted-foreground">
-            Choose a date, pick a free slot and tell us how to reach you. It
-            takes less than a minute.
-          </p>
-          <Button size="lg">
-            <Link href="/book">
-              Book Your Free Trial Lesson{" "}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      </section>
-
-      <section className="border-y border-border bg-card/50">
+      <section className="border-y border-border">
         <div className="mx-auto max-w-6xl px-4 py-20">
           <h2 className="text-center text-3xl font-semibold tracking-tight">
             Students say
@@ -280,20 +259,24 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-3xl px-4 py-20">
-        <h2 className="text-center text-3xl font-semibold tracking-tight">
-          Frequently asked
-        </h2>
-        <Accordion className="mt-8">
-          {faqs.map((f) => (
-            <AccordionItem key={f.q} value={f.q}>
-              <AccordionTrigger className="text-left">{f.q}</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
-                {f.a}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+      <section className="px-4 py-20 bg-card/50">
+        <div className="mx-auto max-w-2xl">
+          <h2 className="text-center text-3xl font-semibold tracking-tight">
+            Frequently asked
+          </h2>
+          <Accordion className="mt-8">
+            {faqs.map((f) => (
+              <AccordionItem key={f.q} value={f.q}>
+                <AccordionTrigger className="text-left hover:no-underline">
+                  {f.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">
+                  {f.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
       </section>
 
       <footer className="border-t border-border">

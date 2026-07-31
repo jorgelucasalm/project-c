@@ -20,6 +20,18 @@ export default function SchoolCalendar({
 }) {
   return (
     <FullCalendar
+      slotLabelFormat={{
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        meridiem: false,
+      }}
+      eventTimeFormat={{
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        meridiem: false,
+      }}
       plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
       initialView="timeGridWeek"
       headerToolbar={{
@@ -34,8 +46,8 @@ export default function SchoolCalendar({
       droppable
       eventResizableFromStart
       selectable
-      slotMinTime="07:00:00"
-      slotMaxTime="21:00:00"
+      slotMinTime="06:00:00"
+      slotMaxTime="22:00:00"
       allDaySlot={false}
       expandRows
       slotDuration="00:30:00"
@@ -54,15 +66,21 @@ export default function SchoolCalendar({
         const lesson = arg.event.extendedProps.lesson as Lesson;
         return (
           <div className="overflow-hidden px-1.5 py-1 leading-tight text-white">
-            <p className="truncate text-[11px] font-semibold">{studentName(lesson.studentId)}</p>
+            <p className="truncate text-[11px] font-semibold">
+              {studentName(lesson.studentId)}
+            </p>
             <p className="truncate text-[10px] opacity-90">
               {teacherName(lesson.teacherId)} · {lesson.type}
             </p>
-            <p className="truncate text-[10px] uppercase tracking-wide opacity-80">{lesson.status}</p>
+            <p className="truncate text-[10px] uppercase tracking-wide opacity-80">
+              {lesson.status}
+            </p>
           </div>
         );
       }}
-      eventClick={(info) => onSelectLesson(info.event.extendedProps.lesson as Lesson)}
+      eventClick={(info) =>
+        onSelectLesson(info.event.extendedProps.lesson as Lesson)
+      }
       eventDrop={(info) => {
         onMoveLesson(info.event.id, info.event.startStr, info.event.endStr);
         toast.success("Lesson rescheduled");
