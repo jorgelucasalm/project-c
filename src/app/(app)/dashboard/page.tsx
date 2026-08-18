@@ -21,7 +21,7 @@ import {
   YAxis,
 } from "recharts";
 
-import { AppShell } from "@/components/app-shell";
+import { AppPageHeader } from "@/components/app-shell";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -44,17 +44,16 @@ export default function Dashboard() {
     .slice(0, 6);
 
   return (
-    <AppShell
-      title="Dashboard"
-      description={format(today, "EEEE, d MMMM yyyy")}
-      actions={
-        <Button>
-          <Link href="/calendar">
+    <>
+      <AppPageHeader
+        title="Dashboard"
+        description={format(today, "EEEE, d MMMM yyyy")}
+        actions={
+          <Button nativeButton={false} render={<Link href="/calendar" />}>
             <CalendarDays className="mr-2 h-4 w-4" /> Open calendar
-          </Link>
-        </Button>
-      }
-    >
+          </Button>
+        }
+      />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Active students"
@@ -86,15 +85,19 @@ export default function Dashboard() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        <div className="card-surface p-5 lg:col-span-2">
+        <div className="card-surface min-w-0 p-5 lg:col-span-2">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Revenue growth</p>
               <p className="text-sm text-muted-foreground">Last 6 months</p>
             </div>
           </div>
-          <div className="mt-4 h-64">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="mt-4 h-64 min-w-0">
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              initialDimension={{ width: 320, height: 256 }}
+            >
               <AreaChart
                 data={revenueByMonth}
                 margin={{ left: -20, right: 8, top: 8 }}
@@ -145,11 +148,15 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card-surface p-5">
+        <div className="card-surface min-w-0 p-5">
           <p className="font-medium">Lessons per weekday</p>
           <p className="text-sm text-muted-foreground">This week</p>
-          <div className="mt-4 h-64">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="mt-4 h-64 min-w-0">
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              initialDimension={{ width: 320, height: 256 }}
+            >
               <BarChart
                 data={lessonsByWeekday}
                 margin={{ left: -24, right: 8, top: 8 }}
@@ -189,8 +196,13 @@ export default function Dashboard() {
       <div className="card-surface mt-4 p-5">
         <div className="flex items-center justify-between gap-3">
           <p className="font-medium">Upcoming lessons</p>
-          <Button variant="ghost" size="sm">
-            <Link href="/calendar">View calendar</Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            nativeButton={false}
+            render={<Link href="/calendar" />}
+          >
+            View calendar
           </Button>
         </div>
         <ul className="mt-3 divide-y divide-border">
@@ -222,6 +234,6 @@ export default function Dashboard() {
           ))}
         </ul>
       </div>
-    </AppShell>
+    </>
   );
 }

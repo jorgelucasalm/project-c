@@ -8,7 +8,6 @@ import {
   MessageCircle,
   Quote,
   Sparkles,
-  Star,
   Users,
 } from "lucide-react";
 
@@ -127,8 +126,14 @@ export default function Landing() {
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-              <Link href="/dashboard">Admin login</Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden sm:inline-flex"
+              nativeButton={false}
+              render={<Link href="/dashboard" />}
+            >
+              Admin login
             </Button>
           </div>
         </div>
@@ -145,11 +150,14 @@ export default function Landing() {
               life. Try your first 30-minute lesson free.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button size="lg" className="px-6 py-6">
-                <Link href="/book" className="flex items-center">
-                  Book Your Free Trial Lesson{" "}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+              <Button
+                size="lg"
+                className="px-6 py-6"
+                nativeButton={false}
+                render={<Link href="/book" />}
+              >
+                Book Your Free Trial Lesson{" "}
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
@@ -192,8 +200,12 @@ export default function Landing() {
                 </Link>
               ))}
             </div>
-            <Button className="mt-4 w-full">
-              <Link href="/book">See all available times</Link>
+            <Button
+              className="mt-4 w-full"
+              nativeButton={false}
+              render={<Link href="/book" />}
+            >
+              See all available times
             </Button>
           </div>
         </div>

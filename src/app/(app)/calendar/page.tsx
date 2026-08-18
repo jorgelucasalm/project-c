@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { AppShell } from "@/components/app-shell";
+import { AppPageHeader } from "@/components/app-shell";
 import { LessonDialog } from "@/components/lesson-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,15 +34,16 @@ export default function CalendarPage() {
     setItems((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)));
 
   return (
-    <AppShell
-      title="Calendar"
-      description="Drag to reschedule, resize to change duration, click to open a lesson."
-      actions={
-        <Button onClick={() => toast.success("New lesson draft created")}>
-          <Plus className="mr-2 h-4 w-4" /> Create lesson
-        </Button>
-      }
-    >
+    <>
+      <AppPageHeader
+        title="Calendar"
+        description="Drag to reschedule, resize to change duration, click to open a lesson."
+        actions={
+          <Button onClick={() => toast.success("New lesson draft created")}>
+            <Plus className="mr-2 h-4 w-4" /> Create lesson
+          </Button>
+        }
+      />
       <div className="mb-3 flex flex-wrap gap-x-4 gap-y-2">
         {legend.map((l) => (
           <span
@@ -76,6 +77,6 @@ export default function CalendarPage() {
         onOpenChange={setOpen}
         onUpdate={update}
       />
-    </AppShell>
+    </>
   );
 }

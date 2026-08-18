@@ -110,8 +110,13 @@ function AppSidebar() {
         <div className="rounded-xl bg-primary-soft p-3 text-xs text-foreground/80">
           <p className="font-medium text-foreground">Trial funnel is live</p>
           <p className="mt-1">Share your booking page to fill next week.</p>
-          <Button size="sm" className="mt-3 w-full">
-            <Link href="/book">Open booking page</Link>
+          <Button
+            size="sm"
+            className="mt-3 w-full"
+            nativeButton={false}
+            render={<Link href="/book" />}
+          >
+            Open booking page
           </Button>
         </div>
       </SidebarFooter>
@@ -169,14 +174,8 @@ function GlobalSearch({
 }
 
 export function AppShell({
-  title,
-  description,
-  actions,
   children,
 }: {
-  title: string;
-  description?: string;
-  actions?: ReactNode;
   children: ReactNode;
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -231,16 +230,18 @@ export function AppShell({
             <div className="flex items-center gap-1">
               <ThemeToggle />
               <Popover>
-                <PopoverTrigger>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-4 w-4" />
-                    {unread > 0 && (
-                      <span className="absolute right-1.5 top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
-                        {unread}
-                      </span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
+                <PopoverTrigger
+                  render={
+                    <Button variant="ghost" size="icon" className="relative">
+                      <Bell className="h-4 w-4" />
+                      {unread > 0 && (
+                        <span className="absolute right-1.5 top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                          {unread}
+                        </span>
+                      )}
+                    </Button>
+                  }
+                />
                 <PopoverContent align="end" className="w-80 p-0">
                   <div className="border-b border-border px-4 py-3 text-sm font-medium">
                     Notifications
@@ -259,25 +260,33 @@ export function AppShell({
                     ))}
                   </ScrollArea>
                   <div className="p-2">
-                    <Button variant="ghost" size="sm" className="w-full">
-                      <Link href="/notifications">View all</Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full"
+                      nativeButton={false}
+                      render={<Link href="/notifications" />}
+                    >
+                      View all
                     </Button>
                   </div>
                 </PopoverContent>
               </Popover>
               <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <Button variant="ghost" className="gap-2 px-1.5">
-                    <Avatar className="h-7 w-7">
-                      <AvatarFallback className="bg-primary-soft text-xs text-primary">
-                        AR
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="hidden text-sm font-medium md:inline">
-                      Alex Reed
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
+                <DropdownMenuTrigger
+                  render={
+                    <Button variant="ghost" className="gap-2 px-1.5">
+                      <Avatar className="h-7 w-7">
+                        <AvatarFallback className="bg-primary-soft text-xs text-primary">
+                          AR
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="hidden text-sm font-medium md:inline">
+                        Alex Reed
+                      </span>
+                    </Button>
+                  }
+                />
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuLabel>Alex Reed · Admin</DropdownMenuLabel>
                   <DropdownMenuSeparator />
@@ -301,25 +310,34 @@ export function AppShell({
               </DropdownMenu>
             </div>
           </header>
-          <main className="min-w-0 flex-1 p-4 sm:p-6">
-            <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
-                  {title}
-                </h1>
-                {description && (
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {description}
-                  </p>
-                )}
-              </div>
-              {actions}
-            </div>
-            {children}
-          </main>
+          <main className="min-w-0 flex-1 p-4 sm:p-6">{children}</main>
         </SidebarInset>
       </div>
       <GlobalSearch open={searchOpen} setOpen={setSearchOpen} />
     </SidebarProvider>
+  );
+}
+
+export function AppPageHeader({
+  title,
+  description,
+  actions,
+}: {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
+          {title}
+        </h1>
+        {description && (
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+        )}
+      </div>
+      {actions}
+    </div>
   );
 }
