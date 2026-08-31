@@ -1,238 +1,194 @@
-"use client";
-
 import Link from "next/link";
-import { format } from "date-fns";
 import {
-  CalendarDays,
-  DollarSign,
-  GraduationCap,
-  Sparkles,
   Users,
+  CalendarDays,
+  Rocket,
+  Wallet,
+  TrendingUp,
+  Clock,
+  Filter,
+  MoreHorizontal,
 } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { requireProfile } from "@/features/auth/session";
+import { getDashboardMetrics } from "@/services/dashboard";
+import { getTodayLessons } from "@/services/lessons";
+import { listStudents } from "@/services/students";
+import { MetricCard } from "@/components/dashboard/metric-card";
+import { StatusBadge } from "@/components/students/status-badge";
+import { formatCentsToBRL } from "@/lib/format";
+import { NewClassButton } from "@/components/lessons/new-class-button";
 
-import { AppPageHeader } from "@/components/app-shell";
-import { StatCard } from "@/components/stat-card";
-import { StatusBadge } from "@/components/status-badge";
-import { Button } from "@/components/ui/button";
-import {
-  lessons,
-  lessonsByWeekday,
-  revenueByMonth,
-  studentName,
-  teacherName,
-} from "@/lib/mock-data";
+export const metadata = { title: "Dashboard — Sistema de Gestão de Aulas" };
 
-export default function Dashboard() {
-  const today = new Date();
-  const todays = lessons.filter(
-    (l) => new Date(l.start).toDateString() === today.toDateString(),
-  );
-  const upcoming = lessons
-    .filter((l) => new Date(l.start) > today && l.status !== "canceled")
-    .sort((a, b) => +new Date(a.start) - +new Date(b.start))
-    .slice(0, 6);
+export default async function DashboardPage() {
+  await requireProfile();
+  const [metrics, todayLessons, recentStudents] = await Promise.all([
+    getDashboardMetrics(),
+    getTodayLessons(),
+    listStudents({ page: 1, pageSize: 4 }),
+  ]);
 
   return (
     <>
-      <AppPageHeader
-        title="Dashboard"
-        description={format(today, "EEEE, d MMMM yyyy")}
-        actions={
-          <Button nativeButton={false} render={<Link href="/calendar" />}>
-            <CalendarDays className="mr-2 h-4 w-4" /> Open calendar
-          </Button>
-        }
-      />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Active students"
-          value="48"
-          delta="+6.2%"
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
+        <div>
+          <h2 className="font-headline text-headline text-primary">Overview</h2>
+          <p className="font-body text-body text-on-surface-variant mt-xs">
+            Aqui está o que está acontecendo na sua escola hoje.
+          </p>
+        </div>
+        <NewClassButton />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
+        <MetricCard
+          label="Alunos Ativos"
+          value={String(metrics.activeStudents)}
           icon={Users}
-          hint="vs last month"
+          hint="+5% este mês"
+          hintIcon={TrendingUp}
+          hintClassName="text-sky-pop"
         />
-        <StatCard
-          label="Trial lessons this week"
-          value="7"
-          delta="+2"
-          icon={Sparkles}
-          hint="3 converted"
-        />
-        <StatCard
-          label="Today's lessons"
-          value={String(todays.length)}
+        <MetricCard
+          label="Aulas Hoje"
+          value={String(metrics.lessonsToday)}
           icon={CalendarDays}
-          hint="2 remaining"
+          hint={metrics.nextLessonTime ? `Próxima às ${metrics.nextLessonTime}` : "Sem próximas aulas"}
+          hintIcon={Clock}
         />
-        <StatCard
-          label="Monthly revenue"
-          value="$9,280"
-          delta="+7.4%"
-          icon={DollarSign}
-          hint="July"
+        <MetricCard
+          label="Aulas Trial"
+          value={String(metrics.trialLessons)}
+          icon={Rocket}
+          hint={`${metrics.trialAwaitingConversion} aguardando conversão`}
+          accent
+        />
+        <MetricCard
+          label="Receita Mensal"
+          value={formatCentsToBRL(metrics.monthlyRevenueCents)}
+          icon={Wallet}
+          hint="+12% vs mês anterior"
+          hintIcon={TrendingUp}
+          hintClassName="text-secondary"
         />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        <div className="card-surface min-w-0 p-5 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Revenue growth</p>
-              <p className="text-sm text-muted-foreground">Last 6 months</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+        <div className="lg:col-span-1 bg-surface-container-lowest border border-smoke rounded-lg p-lg">
+          <div className="flex justify-between items-center mb-md pb-sm border-b border-smoke">
+            <h3 className="font-headline text-subheading text-primary">Aulas de Hoje</h3>
+            <Link href="/calendar" className="font-ui-label text-caption text-primary underline">
+              Ver todas
+            </Link>
+          </div>
+          {todayLessons.length === 0 ? (
+            <p className="font-body text-caption text-on-surface-variant py-md">
+              Nenhuma aula agendada para hoje.
+            </p>
+          ) : (
+            <ul className="space-y-md">
+              {/* Server Component rendered fresh per request — no client-side
+                  re-render/memoization concerns from reading the clock here. */}
+              {todayLessons.map((lesson) => {
+                // eslint-disable-next-line react-hooks/purity
+                const isPast = new Date(lesson.ends_at).getTime() < Date.now();
+                return (
+                  <li
+                    key={lesson.id}
+                    className="flex items-start gap-md group cursor-pointer p-sm -mx-sm rounded-lg hover:bg-mist-gray transition-colors"
+                    style={isPast ? { opacity: 0.6 } : undefined}
+                  >
+                    <div className="min-w-16 text-center">
+                      <p className="font-ui-label text-ui-label text-primary">
+                        {new Date(lesson.starts_at).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                      <p className="font-body text-caption text-on-surface-variant">
+                        {isPast
+                          ? "Finalizada"
+                          : `${Math.round((new Date(lesson.ends_at).getTime() - new Date(lesson.starts_at).getTime()) / 60000)}min`}
+                      </p>
+                    </div>
+                    <div className="w-1 bg-smoke h-12 rounded-full group-hover:bg-primary transition-colors" />
+                    <div>
+                      <p
+                        className="font-ui-label text-ui-label text-primary"
+                        style={isPast ? { textDecoration: "line-through" } : undefined}
+                      >
+                        {lesson.student?.full_name ?? "Aula"}
+                      </p>
+                      <p className="font-body text-caption text-on-surface-variant">
+                        com {lesson.teacher?.full_name}
+                      </p>
+                      {!isPast && (
+                        <div className="inline-block mt-xs bg-sky-pop/20 text-primary px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                          {lesson.location === "online" ? "Online" : "Presencial"}
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div className="lg:col-span-2 bg-surface-container-lowest border border-smoke rounded-lg overflow-hidden flex flex-col">
+          <div className="p-lg border-b border-smoke flex justify-between items-center">
+            <h3 className="font-headline text-subheading text-primary">Alunos Recentes</h3>
+            <div className="flex gap-sm">
+              <button type="button" className="text-on-surface-variant hover:text-primary p-xs rounded hover:bg-mist-gray">
+                <Filter className="size-5" />
+              </button>
+              <button type="button" className="text-on-surface-variant hover:text-primary p-xs rounded hover:bg-mist-gray">
+                <MoreHorizontal className="size-5" />
+              </button>
             </div>
           </div>
-          <div className="mt-4 h-64 min-w-0">
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-              initialDimension={{ width: 320, height: 256 }}
-            >
-              <AreaChart
-                data={revenueByMonth}
-                margin={{ left: -20, right: 8, top: 8 }}
-              >
-                <defs>
-                  <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="0%"
-                      stopColor="var(--color-primary)"
-                      stopOpacity={0.35}
-                    />
-                    <stop
-                      offset="100%"
-                      stopColor="var(--color-primary)"
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--color-border)"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="month"
-                  tickLine={false}
-                  axisLine={false}
-                  fontSize={12}
-                />
-                <YAxis tickLine={false} axisLine={false} fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--color-card)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 12,
-                    fontSize: 12,
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="var(--color-primary)"
-                  strokeWidth={2}
-                  fill="url(#rev)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-mist-gray/50 border-b border-smoke">
+                  <th className="p-md font-ui-label text-caption text-on-surface-variant uppercase tracking-wider">
+                    Nome do Aluno
+                  </th>
+                  <th className="p-md font-ui-label text-caption text-on-surface-variant uppercase tracking-wider">
+                    Plano
+                  </th>
+                  <th className="p-md font-ui-label text-caption text-on-surface-variant uppercase tracking-wider">
+                    Data de Ingresso
+                  </th>
+                  <th className="p-md font-ui-label text-caption text-on-surface-variant uppercase tracking-wider text-right">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-smoke">
+                {recentStudents.items.map((student) => (
+                  <tr key={student.id} className="hover:bg-mist-gray/30 transition-colors">
+                    <td className="p-md">
+                      <div>
+                        <p className="font-ui-label text-ui-label text-primary">{student.full_name}</p>
+                        <p className="font-body text-caption text-on-surface-variant">{student.email}</p>
+                      </div>
+                    </td>
+                    <td className="p-md font-body text-body text-primary">
+                      {student.active_plan_name ?? "—"}
+                    </td>
+                    <td className="p-md font-body text-body text-on-surface-variant">
+                      {new Date(student.created_at).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="p-md text-right">
+                      <StatusBadge status={student.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <div className="card-surface min-w-0 p-5">
-          <p className="font-medium">Lessons per weekday</p>
-          <p className="text-sm text-muted-foreground">This week</p>
-          <div className="mt-4 h-64 min-w-0">
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-              initialDimension={{ width: 320, height: 256 }}
-            >
-              <BarChart
-                data={lessonsByWeekday}
-                margin={{ left: -24, right: 8, top: 8 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--color-border)"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="day"
-                  tickLine={false}
-                  axisLine={false}
-                  fontSize={12}
-                />
-                <YAxis tickLine={false} axisLine={false} fontSize={12} />
-                <Tooltip
-                  cursor={{ fill: "var(--color-muted)" }}
-                  contentStyle={{
-                    background: "var(--color-card)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 12,
-                    fontSize: 12,
-                  }}
-                />
-                <Bar
-                  dataKey="lessons"
-                  fill="var(--color-primary)"
-                  radius={[6, 6, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      <div className="card-surface mt-4 p-5">
-        <div className="flex items-center justify-between gap-3">
-          <p className="font-medium">Upcoming lessons</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            nativeButton={false}
-            render={<Link href="/calendar" />}
-          >
-            View calendar
-          </Button>
-        </div>
-        <ul className="mt-3 divide-y divide-border">
-          {upcoming.map((l) => (
-            <li
-              key={l.id}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-3"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
-                  <GraduationCap className="h-4 w-4" />
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">
-                    {studentName(l.studentId)}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {teacherName(l.teacherId)} · {l.type}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="hidden text-xs text-muted-foreground sm:inline">
-                  {format(new Date(l.start), "EEE d MMM · HH:mm")}
-                </span>
-                <StatusBadge status={l.status} />
-              </div>
-            </li>
-          ))}
-        </ul>
       </div>
     </>
   );

@@ -1,227 +1,145 @@
-"use client";
+import { requireRole } from "@/features/auth/session";
+import { listStudents } from "@/services/students";
+import { listPlans } from "@/services/plans";
+import { listTeachers } from "@/services/teachers";
+import { StudentsFilters } from "@/components/students/students-filters";
+import { StatusBadge } from "@/components/students/status-badge";
+import { StudentRowActions } from "@/components/students/student-row-actions";
+import { Pagination } from "@/components/students/pagination";
+import { AddStudentButton } from "@/components/students/add-student-button";
+import { formatCentsToBRL } from "@/lib/format";
+import type { StudentStatus } from "@/types/domain";
 
-import { format } from "date-fns";
-import { Plus, Search, Users } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+export const metadata = { title: "Alunos — Sistema de Gestão de Aulas" };
 
-import { AppPageHeader } from "@/components/app-shell";
-import { EmptyState } from "@/components/empty-state";
-import { StatusBadge } from "@/components/status-badge";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getPlan, nextLessonFor, plans, students } from "@/lib/mock-data";
-import Link from "next/link";
+const STUDENT_TYPE_LABELS: Record<string, string> = {
+  adult: "Adulto",
+  teen: "Adolescente",
+  kids: "Kids",
+};
 
-function StudentDialog() {
-  const [open, setOpen] = useState(false);
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> New student
-          </Button>
-        }
-      />
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add student</DialogTitle>
-          <DialogDescription>
-            Create a student profile and assign a plan.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="s-name">Full name</Label>
-            <Input id="s-name" placeholder="Jane Doe" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="s-email">Email</Label>
-            <Input id="s-email" type="email" placeholder="jane@mail.com" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="s-wa">WhatsApp</Label>
-            <Input id="s-wa" placeholder="+1 415 555 0100" />
-          </div>
-          <div className="space-y-2">
-            <Label>Plan</Label>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a plan" />
-              </SelectTrigger>
-              <SelectContent>
-                {plans.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} — ${p.monthlyPrice}/mo
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={() => {
-              setOpen(false);
-              toast.success("Student created");
-            }}
-          >
-            Save student
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+function initialsOf(name: string) {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 }
 
-export default function StudentsPage() {
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState("all");
-  const [plan, setPlan] = useState("all");
+const AVATAR_BG_CYCLE = ["bg-secondary-fixed text-on-secondary-fixed", "bg-tertiary-fixed text-on-tertiary-fixed", "bg-primary-fixed text-on-primary-fixed"];
 
-  const rows = students.filter((s) => {
-    const matchesQuery = [s.name, s.email, s.whatsapp]
-      .join(" ")
-      .toLowerCase()
-      .includes(query.toLowerCase());
-    const matchesStatus = status === "all" || s.status === status;
-    const matchesPlan = plan === "all" || s.planId === plan;
-    return matchesQuery && matchesStatus && matchesPlan;
-  });
+export default async function StudentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  await requireRole(["admin", "teacher"]);
+  const params = await searchParams;
+  const page = Number(params.page ?? "1") || 1;
+
+  const [{ items, total, pageSize }, plans, teachers] = await Promise.all([
+    listStudents({
+      search: params.search,
+      status: (params.status as StudentStatus) || undefined,
+      planId: params.planId,
+      teacherId: params.teacherId,
+      page,
+    }),
+    listPlans(),
+    listTeachers(),
+  ]);
 
   return (
     <>
-      <AppPageHeader
-        title="Students"
-        description={`${students.length} students in your school`}
-        actions={<StudentDialog />}
-      />
-      <div className="card-surface p-4 sm:p-5">
-        <div className="grid gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
-          <Tabs value={status} onValueChange={setStatus}>
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="inactive">Inactive</TabsTrigger>
-              <TabsTrigger value="trial">Trial</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <div className="flex flex-wrap gap-2">
-            <div className="relative min-w-0">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search students…"
-                className="w-full pl-9 sm:w-56"
-              />
-            </div>
-            <Select
-              value={plan}
-              onValueChange={(value) => setPlan(value ?? "all")}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Plan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All plans</SelectItem>
-                {plans.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-md border-b border-smoke pb-lg">
+        <div>
+          <h2 className="font-headline text-headline text-on-surface mb-base">Alunos</h2>
+          <p className="font-body text-body text-on-surface-variant">
+            Gerencie matrículas, planos e status dos estudantes.
+          </p>
         </div>
+        <AddStudentButton
+          plans={plans.map((p) => ({ id: p.id, name: p.name }))}
+          teachers={teachers.map((t) => ({ id: t.id, full_name: t.full_name }))}
+        />
+      </div>
 
-        <div className="mt-4 overflow-x-auto">
-          {rows.length === 0 ? (
-            <EmptyState
-              icon={Users}
-              title="No students found"
-              description="Try adjusting your filters or search."
-            />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>WhatsApp</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Monthly price</TableHead>
-                  <TableHead>Next lesson</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((s) => {
-                  const p = getPlan(s.planId);
-                  const next = nextLessonFor(s.id);
-                  return (
-                    <TableRow key={s.id} className="cursor-pointer">
-                      <TableCell className="font-medium">
-                        <Link
-                          href={`/students/${s.id}`}
-                          className="hover:text-primary"
-                        >
-                          {s.name}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {s.whatsapp}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {s.email}
-                      </TableCell>
-                      <TableCell>{p?.name ?? "—"}</TableCell>
-                      <TableCell>{p ? `$${p.monthlyPrice}` : "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {next
-                          ? format(new Date(next.start), "d MMM · HH:mm")
-                          : "—"}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={s.status} />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
+      <StudentsFilters
+        plans={plans.map((p) => ({ id: p.id, name: p.name }))}
+        teachers={teachers.map((t) => ({ id: t.id, full_name: t.full_name }))}
+      />
+
+      <div className="bg-surface-container-lowest border border-smoke rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-container-low border-b border-smoke">
+                <th className="font-ui-label text-caption text-on-surface-variant py-sm px-md uppercase tracking-wider">
+                  Nome
+                </th>
+                <th className="font-ui-label text-caption text-on-surface-variant py-sm px-md uppercase tracking-wider">
+                  Tipo
+                </th>
+                <th className="font-ui-label text-caption text-on-surface-variant py-sm px-md uppercase tracking-wider">
+                  Plano
+                </th>
+                <th className="font-ui-label text-caption text-on-surface-variant py-sm px-md uppercase tracking-wider">
+                  Valor
+                </th>
+                <th className="font-ui-label text-caption text-on-surface-variant py-sm px-md uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="font-ui-label text-caption text-on-surface-variant py-sm px-md uppercase tracking-wider text-right">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody className="font-body text-body divide-y divide-smoke">
+              {items.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-xl text-center text-on-surface-variant font-body text-body">
+                    Nenhum aluno encontrado.
+                  </td>
+                </tr>
+              )}
+              {items.map((student, index) => (
+                <tr key={student.id} className="hover:bg-mist-gray transition-colors">
+                  <td className="py-md px-md">
+                    <div className="flex items-center gap-sm">
+                      <div
+                        className={`size-8 rounded-full flex items-center justify-center font-ui-label text-ui-label ${AVATAR_BG_CYCLE[index % AVATAR_BG_CYCLE.length]}`}
+                      >
+                        {initialsOf(student.full_name)}
+                      </div>
+                      <span className="font-ui-label text-on-surface">{student.full_name}</span>
+                    </div>
+                  </td>
+                  <td className="py-md px-md text-on-surface-variant">
+                    {STUDENT_TYPE_LABELS[student.student_type]}
+                  </td>
+                  <td className="py-md px-md text-on-surface-variant">
+                    {student.active_plan_name ?? "—"}
+                  </td>
+                  <td className="py-md px-md text-on-surface-variant">
+                    {student.active_plan_price_cents ? formatCentsToBRL(student.active_plan_price_cents) : "—"}
+                  </td>
+                  <td className="py-md px-md">
+                    <StatusBadge status={student.status} />
+                  </td>
+                  <td className="py-md px-md text-right">
+                    <StudentRowActions
+                      student={student}
+                      plans={plans.map((p) => ({ id: p.id, name: p.name }))}
+                      teachers={teachers.map((t) => ({ id: t.id, full_name: t.full_name }))}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+        <Pagination page={page} pageSize={pageSize} total={total} basePath="/students" searchParams={params} />
       </div>
     </>
   );

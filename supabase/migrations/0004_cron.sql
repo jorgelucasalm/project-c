@@ -1,0 +1,32 @@
+-- ============================================================================
+-- 0004_cron.sql
+-- Enables the extensions needed to schedule the lesson-reminders Edge
+-- Function directly from Postgres (pg_cron + pg_net), which is the
+-- recommended way to run scheduled jobs against Supabase Edge Functions.
+--
+-- The actual cron.schedule(...) call is intentionally NOT included here
+-- because it needs your project's URL and service role key, which must
+-- never be committed to source control. After deploying the
+-- lesson-reminders function, create the schedule once via the SQL editor
+-- (using Supabase Vault to store the secret) — for example:
+--
+--   select vault.create_secret('<service-role-key>', 'lesson_reminders_key');
+--
+--   select cron.schedule(
+--     'lesson-reminders-every-minute',
+--     '* * * * *',
+--     $$
+--     select net.http_post(
+--       url := '<project-url>/functions/v1/lesson-reminders',
+--       headers := jsonb_build_object(
+--         'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'lesson_reminders_key'),
+--         'Content-Type', 'application/json'
+--       ),
+--       body := '{}'::jsonb
+--     );
+--     $$
+--   );
+-- ============================================================================
+
+create extension if not exists pg_cron with schema extensions;
+create extension if not exists pg_net with schema extensions;

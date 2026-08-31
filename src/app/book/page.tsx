@@ -1,247 +1,66 @@
-"use client";
+import Image from "next/image";
+import { createClient } from "@/lib/supabase/server";
+import { PublicNav } from "@/components/public/public-nav";
+import { AppFooter } from "@/components/layout/app-footer";
+import { BookingForm } from "@/components/booking/booking-form";
 
-import Link from "next/link";
-// import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { addDays, format, isSameDay } from "date-fns";
-import {
-  ArrowLeft,
-  CalendarDays,
-  CheckCircle2,
-  Clock,
-  Loader2,
-  Sparkles,
-} from "lucide-react";
-import { useMemo, useState } from "react";
-import { toast } from "sonner";
+export const metadata = {
+  title: "Agendamento de Aula Experimental — English Academy",
+};
 
-import { EmptyState } from "@/components/empty-state";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { availableSlots, teacherName } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
-
-// export const Route = createFileRoute("/book/")({
-//   head: () => ({
-//     meta: [
-//       { title: "Book a free trial lesson — Lingua School" },
-//       {
-//         name: "description",
-//         content:
-//           "Pick a date and time for your free 30-minute English trial lesson with a certified teacher.",
-//       },
-//       {
-//         property: "og:title",
-//         content: "Book a free trial lesson — Lingua School",
-//       },
-//       {
-//         property: "og:description",
-//         content: "Only real available slots. Confirmation in under a minute.",
-//       },
-//     ],
-//   }),
-//   component: BookTrial,
-// });
-
-export default function BookTrial() {
-  const days = useMemo(
-    () => Array.from({ length: 14 }, (_, i) => addDays(new Date(), i)),
-    [],
-  );
-  const [date, setDate] = useState<Date>(days[0]);
-  const [slot, setSlot] = useState<{ time: string; teacherId: string } | null>(
-    null,
-  );
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", whatsapp: "" });
-
-  const slots = useMemo(() => availableSlots(date, 30, 15), [date]);
-
-  const pickDate = (d: Date) => {
-    setDate(d);
-    setSlot(null);
-    setLoadingSlots(true);
-    setTimeout(() => setLoadingSlots(false), 400);
-  };
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!slot) return toast.error("Please choose a time slot");
-    if (!form.name || !form.email || !form.whatsapp)
-      return toast.error("Please fill in all fields");
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      //   navigate({
-      //     to: "/book/confirmed",
-      //     search: {
-      //       name: form.name,
-      //       date: format(date, "yyyy-MM-dd"),
-      //       time: slot.time,
-      //       teacher: teacherName(slot.teacherId),
-      //     },
-      //   });
-    }, 700);
-  };
+export default async function BookPage() {
+  const supabase = await createClient();
+  const { data: teachers } = await supabase
+    .from("teachers")
+    .select("id, full_name")
+    .order("full_name", { ascending: true });
 
   return (
-    <div className="min-h-screen hero-surface">
-      <header className="border-b border-border/60">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Link>
-          <span className="flex items-center gap-2 text-sm font-semibold">
-            <Sparkles className="h-4 w-4 text-primary" /> Lingua School
-          </span>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-3xl px-4 py-10">
-        <div className="text-center">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Book your free trial lesson
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            30 minutes, one-to-one, no card required.
-          </p>
-        </div>
-
-        <section className="card-surface mt-8 p-5 sm:p-6">
-          <p className="flex items-center gap-2 text-sm font-medium">
-            <CalendarDays className="h-4 w-4 text-primary" /> 1. Select a date
-          </p>
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
-            {days.map((d) => {
-              const active = isSameDay(d, date);
-              return (
-                <button
-                  key={d.toISOString()}
-                  onClick={() => pickDate(d)}
-                  className={cn(
-                    "min-w-[74px] shrink-0 rounded-xl border px-3 py-3 text-center transition-colors",
-                    active
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card hover:border-primary/40",
-                  )}
-                >
-                  <span className="block text-[11px] uppercase tracking-wide opacity-80">
-                    {format(d, "EEE")}
-                  </span>
-                  <span className="mt-0.5 block text-lg font-semibold">
-                    {format(d, "d")}
-                  </span>
-                  <span className="block text-[11px] opacity-80">
-                    {format(d, "MMM")}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="card-surface mt-4 p-5 sm:p-6">
-          <p className="flex items-center gap-2 text-sm font-medium">
-            <Clock className="h-4 w-4 text-primary" /> 2. Choose an available
-            time
-          </p>
-          {loadingSlots ? (
-            <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-11 rounded-xl" />
-              ))}
+    <div className="min-h-screen flex flex-col bg-background text-on-background">
+      <PublicNav />
+      <main className="flex-grow">
+        <section className="bg-secondary-container py-section-v px-gutter md:px-lg overflow-hidden relative">
+          <div className="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-2 gap-xxl items-center">
+            <div className="z-10 relative">
+              <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-md tracking-tight">
+                Sua jornada no inglês começa aqui
+              </h1>
+              <p className="font-body text-subheading text-on-surface-variant mb-xl max-w-lg">
+                Agende uma aula experimental gratuita com um de nossos professores especialistas.
+              </p>
             </div>
-          ) : slots.length === 0 ? (
-            <div className="mt-4">
-              <EmptyState
-                icon={CalendarDays}
-                title="No slots on this day"
-                description="Our teachers are fully booked. Try another date."
-              />
-            </div>
-          ) : (
-            <>
-              <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {slots.map((s) => (
-                  <button
-                    key={s.time + s.teacherId}
-                    onClick={() => setSlot(s)}
-                    className={cn(
-                      "rounded-xl border px-2 py-3 text-sm font-medium transition-colors",
-                      slot?.time === s.time
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-background hover:border-primary/40 hover:text-primary",
-                    )}
-                  >
-                    {s.time}
-                  </button>
-                ))}
+            <div className="relative h-[280px] md:h-[380px] flex justify-center items-center">
+              <div className="absolute w-56 h-72 rounded-xl overflow-hidden border border-smoke -rotate-2 z-10">
+                <Image
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuATYiqmYG6Lh1SrbfS3c2ROTh7siBCkqRto2vA36M1S6oEhzOAIrUPOeyAV673byN7bHvlPN95po0vrfhfGYcb6TlgDbllAjMIUsLlCWVjr3FH1pC98nUPGqaZwHSTlsEgdzrgkMHQ4HZWg5IY-qaEG1gsakG3RBW7GuWeIMZVJHXgHJfENmaCc5wTlWCZHQ4Z8X1lW9CiOkEFd8Bv_LGfYJ-KnSClcVAMoUe-pBQdsqbkNsnv2FGxL"
+                  alt="Professora de inglês sorrindo em sala de aula"
+                  fill
+                  className="object-cover"
+                />
+                <span className="absolute bottom-4 left-4 bg-primary text-on-primary px-3 py-1 font-ui-label text-ui-label rounded-[4px] rotate-1 border border-smoke">
+                  Teacher Sarah
+                </span>
               </div>
-              {slot && (
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {format(date, "EEEE, d MMM")} at {slot.time} with{" "}
-                  <span className="font-medium text-foreground">
-                    {teacherName(slot.teacherId)}
-                  </span>
-                </p>
-              )}
-            </>
-          )}
-        </section>
-
-        <form onSubmit={submit} className="card-surface mt-4 p-5 sm:p-6">
-          <p className="flex items-center gap-2 text-sm font-medium">
-            <CheckCircle2 className="h-4 w-4 text-primary" /> 3. Your details
-          </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="name">Full name</Label>
-              <Input
-                id="name"
-                placeholder="Jane Doe"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="jane@mail.com"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp">WhatsApp number</Label>
-              <Input
-                id="whatsapp"
-                placeholder="+55 11 98765-4321"
-                value={form.whatsapp}
-                onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
-              />
+              <div className="absolute w-48 h-60 rounded-xl overflow-hidden border border-smoke translate-x-20 translate-y-10 rotate-3 z-20">
+                <Image
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDf0y6NXgOGpfpYw6EwRtJo0zKSMH84xV5WGM3MNnXXjKW9k5SSnMJPduEYEOXF5aOc3aNC1lMbZ9rOwOdTFt7ISwjKUrgQDhBieVUyagG7xh06yV-j5JWbQPMNc2n15lK-kU7a7mxJHmYAx7mj3t2SHEkbZ_RfDHvFrXqhTGMh8VXXQNeusSkCJ-qUB2Y5_JeQQV54AN3b1bD03nfpj4Lg1-GFSpBSymbPUrTZauc1rl96xy3icYqm"
+                  alt="Grupo de alunos conversando durante aula de inglês"
+                  fill
+                  className="object-cover"
+                />
+                <span className="absolute top-4 right-4 bg-signal-yellow text-primary px-3 py-1 font-ui-label text-ui-label rounded-[4px] -rotate-2 border border-smoke">
+                  Interactive!
+                </span>
+              </div>
             </div>
           </div>
-          <Button
-            type="submit"
-            size="lg"
-            className="mt-6 w-full"
-            disabled={submitting}
-          >
-            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Confirm my free trial lesson
-          </Button>
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            We&#39;ll send a confirmation by email and a reminder on WhatsApp.
-          </p>
-        </form>
+        </section>
+
+        <section className="py-section-v px-gutter md:px-lg bg-surface">
+          <BookingForm teachers={teachers ?? []} />
+        </section>
       </main>
+      <AppFooter />
     </div>
   );
 }

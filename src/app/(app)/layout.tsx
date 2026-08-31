@@ -1,11 +1,13 @@
-"use client";
+import type { ReactNode } from "react";
+import { requireProfile } from "@/features/auth/session";
+import { AppShell } from "@/components/layout/app-shell";
 
-import { AppShell } from "@/components/app-shell";
-
-export default function AppLayout({
+export default async function AuthenticatedLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return <AppShell>{children}</AppShell>;
+}: {
+  children: ReactNode;
+}) {
+  const profile = await requireProfile();
+
+  return <AppShell profile={profile}>{children}</AppShell>;
 }
