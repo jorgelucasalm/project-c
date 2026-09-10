@@ -98,7 +98,7 @@ export function LessonFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-surface-container-lowest">
+      <DialogContent className="sm:max-w-[32rem] bg-surface-container-lowest">
         <DialogHeader>
           <DialogTitle className="font-headline text-headline-sm text-primary">
             Nova Aula

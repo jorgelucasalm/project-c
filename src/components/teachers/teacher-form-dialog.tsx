@@ -29,7 +29,7 @@ interface TeacherFormDialogProps {
 export function TeacherFormDialog({ open, onOpenChange, teacher }: TeacherFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-surface-container-lowest">
+      <DialogContent className="sm:max-w-[32rem] bg-surface-container-lowest">
         {open && (
           <TeacherFormBody key={teacher?.id ?? "new"} teacher={teacher} onOpenChange={onOpenChange} />
         )}

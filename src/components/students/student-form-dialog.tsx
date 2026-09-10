@@ -43,7 +43,7 @@ interface StudentFormDialogProps {
 export function StudentFormDialog({ open, onOpenChange, student, plans, teachers }: StudentFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-surface-container-lowest">
+      <DialogContent className="sm:max-w-[32rem] bg-surface-container-lowest">
         {open && (
           <StudentFormBody
             key={student?.id ?? "new"}

@@ -59,7 +59,7 @@ export function LessonDetailDialog({ event, onOpenChange, onChanged }: LessonDet
 
   return (
     <Dialog open={Boolean(event)} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-surface-container-lowest">
+      <DialogContent className="sm:max-w-[28rem] bg-surface-container-lowest">
         <DialogHeader>
           <DialogTitle className="font-headline text-headline-sm text-primary">
             {event.title}

@@ -25,7 +25,7 @@ export default async function BookPage() {
               <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-md tracking-tight">
                 Sua jornada no inglês começa aqui
               </h1>
-              <p className="font-body text-subheading text-on-surface-variant mb-xl max-w-lg">
+              <p className="font-body text-subheading text-on-surface-variant mb-xl max-w-[32rem]">
                 Agende uma aula experimental gratuita com um de nossos professores especialistas.
               </p>
             </div>

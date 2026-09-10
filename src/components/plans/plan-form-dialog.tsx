@@ -35,7 +35,7 @@ interface PlanFormDialogProps {
 export function PlanFormDialog({ open, onOpenChange, plan }: PlanFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-surface-container-lowest">
+      <DialogContent className="sm:max-w-[32rem] bg-surface-container-lowest">
         {open && <PlanFormBody key={plan?.id ?? "new"} plan={plan} onOpenChange={onOpenChange} />}
       </DialogContent>
     </Dialog>

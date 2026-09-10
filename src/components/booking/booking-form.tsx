@@ -120,7 +120,7 @@ export function BookingForm({ teachers }: BookingFormProps) {
           </h3>
 
           {teachers.length > 1 && (
-            <div className="mb-md flex flex-col gap-base max-w-xs">
+            <div className="mb-md flex flex-col gap-base max-w-[20rem]">
               <Label className="font-ui-label text-ui-label text-on-surface-variant">
                 Professor
               </Label>

@@ -20,7 +20,7 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      <div className="bg-surface-container-lowest border border-smoke rounded-lg p-lg max-w-lg flex flex-col gap-md">
+      <div className="bg-surface-container-lowest border border-smoke rounded-lg p-lg max-w-[32rem] flex flex-col gap-md">
         <div>
           <p className="font-ui-label text-caption text-on-surface-variant">Nome</p>
           <p className="font-body text-body text-primary">{profile.full_name}</p>

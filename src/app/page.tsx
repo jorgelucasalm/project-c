@@ -12,7 +12,7 @@ export default function HomePage() {
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary tracking-tight">
             Sistema de Gestão de Aulas
           </h1>
-          <p className="font-body text-subheading text-on-surface-variant max-w-lg">
+          <p className="font-body text-subheading text-on-surface-variant max-w-[32rem]">
             Gerencie alunos, professores, planos e agendamentos da sua escola de inglês em um só
             lugar.
           </p>
