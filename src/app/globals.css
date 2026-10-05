@@ -238,6 +238,9 @@
   --spacing-xxl: 48px;
   --spacing-section-v: 64px;
   --container-container-max: 1200px;
+  /* Named spacing tokens also resolve in max-w-*, so keep copy widths distinct. */
+  --container-copy: 32rem;
+  --container-intro: 36rem;
 
   /* --- Reference typography (font-headline/body/subheading/ui-label/caption
      paired with text-headline/body/subheading/... sizes) --- */
