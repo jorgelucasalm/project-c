@@ -1,13 +1,32 @@
-# Sistema de Gestão de Aulas
+# Lesson Management System
 
-Aplicação de gestão de aulas para uma escola de inglês — alunos, professores,
-planos, disponibilidade, agendamento (calendário + aula experimental pública),
-integração opcional com Google Calendar e um serviço de notificações
-desacoplado de canal (WhatsApp/Email/Push/SMS).
+A lesson management application for an English school — students, teachers,
+plans, availability, scheduling (calendar + public trial lesson booking),
+optional Google Calendar integration, and a channel-independent notification
+service (WhatsApp/Email/Push/SMS).
 
-A UI foi construída a partir do HTML de referência (`site.html`) e do design
-system em `DESIGN.md`, preservando layout, tipografia (DM Sans + Hanken
-Grotesk), cores, espaçamentos e fluxos de navegação originais.
+The UI was built from the reference HTML (`site.html`) and the design
+system in `DESIGN.md`, preserving the original layout, typography (DM Sans +
+Hanken Grotesk), colors, spacing, and navigation flows.
+
+## Public pages
+
+- `/`: teacher-focused homepage based on `test.html`, featuring a carousel,
+  monthly revenue calculator (weekly hours × hourly rate × 4), sample
+  schedule, and FAQ. The calculator is only a simulation; it neither persists
+  data nor changes availability. Workspace access uses the existing login;
+  there is no new teacher registration flow.
+- `/mariagdleal`: former student homepage, preserved as a public page
+  with a fixed ID for now, without a dynamic link to teacher profiles.
+- `/book`: trial lesson booking.
+
+Both homepages remain accessible to authenticated users as well.
+The `secondary-accent` token preserves the HTML's pink color without changing
+the semantic `secondary` token used by existing components. Text widths use
+`max-w-intro` or explicit values to avoid collisions with spacing tokens.
+Homepage sections live in `src/components/public/home/`; `src/app/page.tsx`
+contains only metadata and page composition. Static components remain on
+the server, while the carousel and calculator are client components.
 
 ## Stack
 
@@ -15,106 +34,106 @@ Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind CSS v4 ·
 shadcn/ui · Supabase (Postgres + Auth + RLS) · FullCalendar · React Hook Form
 + Zod · Lucide Icons · googleapis.
 
-## Arquitetura
+## Architecture
 
 ```
 src/
-├── app/                # Rotas (App Router). (app)/ = área autenticada
-├── components/         # Componentes de UI reutilizáveis, por domínio
-├── features/           # Server Actions + schemas de UI por domínio
+├── app/                # Routes (App Router). (app)/ = authenticated area
+├── components/         # Reusable UI components, organized by domain
+├── features/           # Server Actions + UI schemas by domain
 ├── lib/
 │   ├── supabase/       # Clients (browser/server/admin) + middleware
-│   └── google-calendar/# Integração isolada com Google Calendar
-├── services/           # Acesso a dados / regras de negócio (Supabase)
-│   └── notifications/  # NotificationService (providers plugáveis)
-├── schemas/             # Validação Zod compartilhada
-└── types/               # Tipos de domínio + espelho do schema Supabase
+│   └── google-calendar/# Isolated Google Calendar integration
+├── services/           # Data access / business rules (Supabase)
+│   └── notifications/  # NotificationService (pluggable providers)
+├── schemas/             # Shared Zod validation
+└── types/               # Domain types + Supabase schema mirror
 
 supabase/
-├── migrations/          # Schema SQL, RLS, funções (versionado)
+├── migrations/          # SQL schema, RLS, functions (version-controlled)
 ├── functions/           # Edge Functions (Deno)
-└── seed.sql             # Dados de exemplo para desenvolvimento local
+└── seed.sql             # Sample data for local development
 ```
 
-Regras de negócio (disponibilidade, conflitos de horário, notificações,
-sincronização com Google Calendar) vivem em `services/`; os Server Actions em
-`features/*/actions.ts` apenas validam entrada (Zod) e delegam.
+Business rules (availability, scheduling conflicts, notifications,
+Google Calendar synchronization) live in `services/`; Server Actions in
+`features/*/actions.ts` only validate input (Zod) and delegate.
 
-## Configurando o Supabase
+## Setting up Supabase
 
-1. Crie um projeto em [supabase.com](https://supabase.com) (ou rode
-   `supabase start` localmente com a CLI).
-2. Aplique as migrations, na ordem, via SQL editor ou `supabase db push`:
-   - `supabase/migrations/0001_init.sql` — tabelas, enums, triggers, e a
-     constraint de exclusão que impede sobreposição de horários por professor
-     (validação de conflito **no banco**, não apenas no frontend).
-   - `supabase/migrations/0002_rls.sql` — Row Level Security para
+1. Create a project at [supabase.com](https://supabase.com) (or run
+   `supabase start` locally using the CLI).
+2. Apply the migrations in order using the SQL editor or `supabase db push`:
+   - `supabase/migrations/0001_init.sql` — tables, enums, triggers, and the
+     exclusion constraint that prevents overlapping schedules for each teacher
+     (conflict validation **in the database**, not just on the frontend).
+   - `supabase/migrations/0002_rls.sql` — Row Level Security for
      `admin` / `teacher` / `student`.
-   - `supabase/migrations/0003_functions.sql` — `get_available_slots()` e
-     `book_trial_lesson()`, as RPCs que alimentam o fluxo público de aula
-     experimental sem expor tabelas diretamente ao usuário anônimo.
-   - `supabase/migrations/0004_cron.sql` — habilita `pg_cron`/`pg_net` para
-     agendar a Edge Function de lembretes (veja comentário no arquivo).
-3. (Opcional, dev) rode `supabase/seed.sql` para ter planos/professores de
-   exemplo.
-4. Copie `.env.example` para `.env.local` e preencha
-   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` e
+   - `supabase/migrations/0003_functions.sql` — `get_available_slots()` and
+     `book_trial_lesson()`, the RPCs powering the public trial lesson flow
+     without exposing tables directly to anonymous users.
+   - `supabase/migrations/0004_cron.sql` — enables `pg_cron`/`pg_net` to
+     schedule the reminder Edge Function (see the comment in the file).
+3. (Optional, development) run `supabase/seed.sql` to create sample plans
+   and teachers.
+4. Copy `.env.example` to `.env.local` and fill in
+   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and
    `SUPABASE_SERVICE_ROLE_KEY`.
 
-As migrations foram validadas ponta a ponta (schema, RLS, RPCs e a
-constraint anti-conflito) contra um Postgres real antes de serem incluídas
-neste repositório.
+The migrations were validated end to end (schema, RLS, RPCs, and the
+conflict-prevention constraint) against a real Postgres instance before being
+included in this repository.
 
-## Rodando localmente
+## Running locally
 
 ```bash
 npm install
 npm run dev       # http://localhost:3000
-npm run test      # Vitest — schemas e helpers
+npm run test      # Vitest — schemas and helpers
 npm run lint
 npm run build
 ```
 
-## Autenticação e papéis
+## Authentication and roles
 
-Login usa Supabase Auth (email/senha). Um trigger em `profiles` cria o
-perfil automaticamente no signup, com `role` padrão `student` (defina
-`admin`/`teacher` via `raw_user_meta_data.role` ao criar o usuário, ou
-atualize depois com a service role key). O middleware (`src/proxy.ts`)
-protege as rotas de `(app)` e cada página reforça o papel mínimo exigido via
-`requireRole()`.
+Login uses Supabase Auth (email/password). A trigger on `profiles`
+automatically creates a profile at signup with the default `role` of `student`
+(set `admin`/`teacher` through `raw_user_meta_data.role` when creating the user,
+or update it later using the service role key). The middleware (`src/proxy.ts`)
+protects `(app)` routes, and each page enforces the minimum required role
+through `requireRole()`.
 
 ## Google Calendar
 
-Isolado em `src/lib/google-calendar/`. Sem credenciais configuradas
-(`GOOGLE_CALENDAR_*` em `.env`), a integração fica automaticamente inativa —
-o Supabase continua sendo a fonte de verdade e nada quebra. Com credenciais:
-um professor conecta sua conta em **Disponibilidade → Google Calendar** e as
-aulas passam a ser criadas/atualizadas/canceladas no Google Calendar
-automaticamente.
+Isolated in `src/lib/google-calendar/`. Without configured credentials
+(`GOOGLE_CALENDAR_*` in `.env`), the integration is automatically inactive —
+Supabase remains the source of truth, and the application continues to work.
+With credentials configured, a teacher connects their account under
+**Availability → Google Calendar**, and lessons are automatically
+created/updated/canceled in Google Calendar.
 
-## Notificações
+## Notifications
 
-`src/services/notifications/notification-service.ts` expõe:
+`src/services/notifications/notification-service.ts` exposes:
 
 ```ts
 await notificationService.send({ type: "LESSON_REMINDER", userId, lessonId });
 ```
 
-Providers (`whatsapp`, `email`, `sms`, `push`, `log`) implementam a mesma
-interface e só "se ativam" quando as credenciais correspondentes existem em
-`.env` — sem isso, tudo cai no provider `log` (grava em `notifications` e no
-stdout), sem mockar uma integração que não existe.
+Providers (`whatsapp`, `email`, `sms`, `push`, `log`) implement the same
+interface and only become active when the corresponding credentials exist in
+`.env` — otherwise, everything falls back to the `log` provider (writes to
+`notifications` and stdout), without mocking an integration that does not exist.
 
-Lembretes de aula (~10 min antes) são agendados automaticamente por um
-trigger no banco e entregues por `supabase/functions/lesson-reminders`
-(Edge Function agendada via `pg_cron`, ver `0004_cron.sql`).
+Lesson reminders (~10 minutes beforehand) are automatically scheduled by a
+database trigger and delivered by `supabase/functions/lesson-reminders`
+(an Edge Function scheduled through `pg_cron`; see `0004_cron.sql`).
 
-## Fidelidade visual
+## Visual fidelity
 
-Os tokens do `tailwind.config` embutido no `site.html` (cores, spacing,
-tipografia, radius) foram portados 1:1 para `src/app/globals.css` via
-`@theme`, então classes como `bg-mist-gray`, `font-headline`,
-`text-headline`, `p-lg` funcionam exatamente como no HTML de referência. Os
-ícones Material Symbols do HTML foram mapeados para o equivalente mais
-próximo em Lucide (`src/lib/icons.ts`), conforme exigido pela stack.
+The tokens from the `tailwind.config` embedded in `site.html` (colors, spacing,
+typography, radius) were ported 1:1 to `src/app/globals.css` through
+`@theme`, so classes such as `bg-mist-gray`, `font-headline`,
+`text-headline`, and `p-lg` work exactly as in the reference HTML. The HTML's
+Material Symbols icons were mapped to their closest Lucide equivalents
+(`src/lib/icons.ts`), as required by the stack.
