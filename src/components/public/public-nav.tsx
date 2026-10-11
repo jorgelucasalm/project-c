@@ -2,7 +2,7 @@ import Link from "next/link";
 import { HelpCircle } from "lucide-react";
 import { LanguageSelector } from "@/components/public/language-selector";
 
-export function PublicNav() {
+export function PublicNav({ homeHref = "/mariagdleal" }: { homeHref?: string }) {
   return (
     <nav className="text-primary font-headline text-subheading flex flex-wrap md:flex-nowrap justify-between items-center min-h-16 md:h-16 gap-sm py-sm md:py-0 px-gutter md:px-lg sticky top-0 z-40 bg-surface/95 backdrop-blur-sm border-b border-smoke transition-all duration-200">
       <div className="flex items-center gap-md">
@@ -12,13 +12,13 @@ export function PublicNav() {
       </div>
 
       <div className="hidden md:flex items-center gap-lg text-[15px] font-medium font-body">
-        <Link href="/" className="text-primary font-semibold hover:text-graphite hover:underline underline-offset-4 transition-colors">
+        <Link href={homeHref} className="text-primary font-semibold hover:text-graphite hover:underline underline-offset-4 transition-colors">
           Home
         </Link>
-        <Link href="#how-it-works" className="text-graphite hover:text-primary transition-colors">
+        <Link href={`${homeHref}#how-it-works`} className="text-graphite hover:text-primary transition-colors">
           How it works
         </Link>
-        <Link href="#tutors" className="text-graphite hover:text-primary transition-colors">
+        <Link href={`${homeHref}#tutors`} className="text-graphite hover:text-primary transition-colors">
           Why us
         </Link>
       </div>

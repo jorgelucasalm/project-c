@@ -26,7 +26,8 @@ export default async function BookPage() {
                 Sua jornada no inglês começa aqui
               </h1>
               <p className="font-body text-subheading text-on-surface-variant mb-xl max-w-[32rem]">
-                Agende uma aula experimental gratuita com um de nossos professores especialistas.
+                Agende uma aula experimental gratuita com um de nossos
+                professores especialistas.
               </p>
             </div>
             <div className="relative h-[280px] md:h-[380px] flex justify-center items-center">

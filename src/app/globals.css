@@ -179,6 +179,7 @@
   --color-inverse-on-surface: var(--ref-inverse-on-surface);
   --color-on-surface-variant: var(--ref-on-surface-variant);
   --color-secondary-container: var(--ref-secondary-container);
+  --color-secondary-accent: var(--ref-secondary);
   --color-surface-container-highest: var(--ref-surface-container-highest);
   --color-smoke: var(--ref-smoke);
   --color-on-tertiary-fixed: var(--ref-on-tertiary-fixed);
