@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/supabase";
 
-const PUBLIC_PATHS = ["/", "/book", "/login", "/auth"];
+const PUBLIC_PATHS = ["/", "/mariagdleal", "/book", "/login", "/auth"];
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some(
@@ -52,7 +52,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (user && (pathname === "/login" || pathname === "/")) {
+  if (user && pathname === "/login") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
